@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Logs (auto-generated)
+logs/
+
+# Nmap / Scan outputs (runtime data)
+modules/scans/inputs/
+modules/scans/outputs/
+modules/vuln/inputs/
+modules/vuln/outputs/
+modules/outputs/
+modules/reports/outputs/
+
+# Nmap raw files
+*.gnmap
+*.nmap
+*.xml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Build / dist
+*.egg-info/
+dist/
+build/
