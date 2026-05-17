@@ -1,10 +1,3 @@
-"""
-IAST Tool — Internal Assessment & Scanning Toolkit
-Ana giriş noktası.
-
-Akış: Host Discovery → Scan (TCP/UDP) → Vulnerability Analysis
-"""
-
 from __future__ import annotations
 
 from modules.discovery.host_discovery import run_discovery
@@ -29,77 +22,50 @@ except ImportError:
 
 
 def _print_banner() -> None:
-    """Uygulama başlık banner'ını yazdırır."""
     if _HAS_RICH:
         info = get_platform_info()
         admin = "✓ Yönetici" if check_admin() else "✗ Standart Kullanıcı"
-
         banner = Text()
         banner.append(f"\n  {APP_NAME}  ", style="bold cyan")
         banner.append(f"v{APP_VERSION}\n", style="dim white")
         banner.append("  Internal Penetration Testing Toolkit\n", style="italic dim")
-
-        details = (
-            f"  OS: {info['os']} {info['release']}  |  "
-            f"Python: {info['python']}  |  "
-            f"Yetki: {admin}"
-        )
-
+        details = f"  OS: {info['os']} {info['release']}  |  Python: {info['python']}  |  Yetki: {admin}"
         assert _console is not None
-        _console.print(
-            Panel(
-                banner,
-                subtitle=details,
-                border_style="cyan",
-                expand=False,
-                padding=(0, 2),
-            )
-        )
+        _console.print(Panel(banner, subtitle=details, border_style="cyan", expand=False, padding=(0, 2)))
     else:
-        print("\n" + "=" * 50)
+        print("\n" + "="*50)
         print(f"  {APP_NAME} v{APP_VERSION}")
         print("  Internal Penetration Testing Toolkit")
-        print("=" * 50)
+        print("="*50)
         info = get_platform_info()
         admin = "Yönetici" if check_admin() else "Standart Kullanıcı"
         print(f"  OS: {info['os']} {info['release']} | Python: {info['python']} | Yetki: {admin}")
-        print("=" * 50)
+        print("="*50)
 
 
 def _print_menu() -> None:
-    """Ana menüyü yazdırır."""
     if _HAS_RICH:
-        table = Table(
-            show_header=False,
-            box=box.ROUNDED,
-            border_style="dim cyan",
-            padding=(0, 2),
-            expand=False,
-        )
+        table = Table(show_header=False, box=box.ROUNDED, border_style="dim cyan", padding=(0, 2), expand=False)
         table.add_column("key",  style="bold yellow", width=4)
         table.add_column("desc", style="white")
-
         table.add_row("1", "Host Discovery")
-        table.add_row("2", "Scans  (TCP / UDP / AUTO)")
-        table.add_row("3", "Vulnerability Analysis")
-        table.add_row("─", "─" * 24)
+        table.add_row("2", "Scans  (TCP Hızlı / TCP Tam / UDP)")
+        table.add_row("3", "Vulnerability Analysis (FTP / Telnet / SSH)")
+        table.add_row("─", "─" * 32)
         table.add_row("0", "Exit")
-
         assert _console is not None
         _console.print("\n")
         _console.print(table)
     else:
         print("\n=== MAIN MENU ===")
         print("1 - Host Discovery")
-        print("2 - Scans")
-        print("3 - Vulnerability Analysis")
+        print("2 - Scans (TCP Hızlı / TCP Tam / UDP)")
+        print("3 - Vulnerability Analysis (FTP / Telnet / SSH)")
         print("0 - Exit")
 
 
 def main() -> None:
     _print_banner()
-
-    # Bağımlılık kontrolü — Nmap eksikse uyar ama devam et
     run_all_checks()
 
     while True:
@@ -120,7 +86,7 @@ def main() -> None:
             run_scans()
 
         elif choice == "3":
-            print("[i] Not: Vulnerability analizi için önce scan çıktısı gereklidir.")
+            print("[i] Vulnerability analizi için önce TCP Scan çıktısı gereklidir.")
             run_vuln()
 
         elif choice == "0":

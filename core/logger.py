@@ -1,8 +1,3 @@
-"""
-Merkezi logging modülü.
-Hem konsola (renkli) hem de dosyaya log yazar.
-"""
-
 import logging
 import sys
 from pathlib import Path
@@ -32,8 +27,6 @@ except ImportError:
 
 
 class _ColorFormatter(logging.Formatter):
-    """Konsol için renkli log formatter."""
-
     FMT = "[%(levelname)s] %(name)s — %(message)s"
 
     def format(self, record: logging.LogRecord) -> str:
@@ -46,11 +39,9 @@ class _ColorFormatter(logging.Formatter):
 
 
 def _build_root_logger() -> None:
-    """Root logger'ı bir kez yapılandırır."""
     root = logging.getLogger("iast")
     if root.handlers:
-        return  # Zaten kurulmuş
-
+        return
     root.setLevel(logging.DEBUG)
 
     ch = logging.StreamHandler(sys.stdout)
@@ -60,12 +51,10 @@ def _build_root_logger() -> None:
 
     fh = logging.FileHandler(_log_file, encoding="utf-8")
     fh.setLevel(logging.DEBUG)
-    fh.setFormatter(
-        logging.Formatter(
-            fmt="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S",
-        )
-    )
+    fh.setFormatter(logging.Formatter(
+        fmt="%(asctime)s [%(levelname)s] %(name)s — %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    ))
     root.addHandler(fh)
 
 
@@ -73,8 +62,4 @@ _build_root_logger()
 
 
 def get_logger(name: str) -> logging.Logger:
-    """
-    Modül adına göre alt-logger döndürür.
-    Kullanım: logger = get_logger(__name__)
-    """
     return logging.getLogger(f"iast.{name}")

@@ -1,5 +1,0 @@
-# Zorunlu
-colorama>=0.4.6
-
-# Opsiyonel — gelişmiş terminal UI (rich varsa otomatik aktif olur)
-rich>=13.0.0

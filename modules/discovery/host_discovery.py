@@ -1,10 +1,4 @@
-"""
-Host Discovery modülü.
-Nmap ile ağ keşfi yapar ve alive host listesini çıkarır.
-- shell=False ile güvenli subprocess
-- Pure Python .gnmap parser (grep/cut gerektirmez → Windows uyumlu)
-- pathlib ile platform bağımsız yollar
-"""
+from __future__ import annotations
 
 from pathlib import Path
 
@@ -24,11 +18,6 @@ logger = get_logger("discovery")
 
 
 def run_discovery(ip_range: str) -> None:
-    """
-    Verilen IP aralığında Nmap ping taraması yapar
-    ve alive hostları alive_hosts.txt'e yazar.
-    """
-    # Dizinleri oluştur
     SCAN_INPUT_DIR.mkdir(parents=True, exist_ok=True)
     OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -57,11 +46,6 @@ def run_discovery(ip_range: str) -> None:
 
 
 def _extract_alive_hosts(gnmap_file: Path) -> None:
-    """
-    .gnmap dosyasını Pure Python ile parse eder.
-    'Status: Up' satırlarından IP adreslerini çıkarır.
-    grep/cut kullanmadığı için Windows'ta da çalışır.
-    """
     logger.info("Alive hostlar çıkarılıyor...")
 
     if not gnmap_file.is_file():
@@ -69,18 +53,14 @@ def _extract_alive_hosts(gnmap_file: Path) -> None:
         return
 
     alive_hosts = []
-
     try:
         with open(gnmap_file, encoding="utf-8", errors="ignore") as f:
             for line in f:
                 line = line.strip()
-                # Yorum satırlarını atla
                 if line.startswith("#"):
                     continue
-                # Örnek: Host: 10.0.0.1 ()   Status: Up
                 if "Status: Up" in line:
                     parts = line.split()
-                    # parts[0] = "Host:", parts[1] = IP
                     if len(parts) >= 2:
                         alive_hosts.append(parts[1])
     except OSError as e:

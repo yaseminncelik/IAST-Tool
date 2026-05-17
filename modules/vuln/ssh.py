@@ -8,32 +8,35 @@ from config.settings import SCAN_OUTPUT_DIR, VULN_INPUT_DIR, VULN_OUTPUT_DIR
 from core.logger import get_logger
 from modules.reports.report_generator import generate_report
 
-logger = get_logger("vuln.ftp")
+logger = get_logger("vuln.ssh")
 
-_FTP_PATTERN  = re.compile(r"(\d+)/tcp\s+open\s+\S*ftp\S*", re.IGNORECASE)
-_HOST_PATTERN = re.compile(r"Nmap scan report for\s+(\S+)")
+_SSH_PATTERN    = re.compile(r"(\d+)/tcp\s+open\s+\S*ssh\S*", re.IGNORECASE)
+_HOST_PATTERN   = re.compile(r"Nmap scan report for\s+(\S+)")
+_BANNER_PATTERN = re.compile(r"\d+/tcp\s+open\s+\S*ssh\S*\s+(.*)", re.IGNORECASE)
 
 
-def ftp_scan(scan_input: str) -> None:
+def ssh_scan(scan_input: str) -> None:
     VULN_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     target_files = _resolve_targets(scan_input)
     if not target_files:
         return
 
-    all_results: List[Tuple[str, str]] = []
+    all_results: List[Tuple[str, str, str]] = []
     for target in target_files:
-        all_results.extend(_parse_ftp_from_nmap(target))
+        all_results.extend(_parse_ssh_from_nmap(target))
 
     if not all_results:
-        logger.warning("Hiçbir FTP servisi bulunamadı.")
+        logger.warning("Hiçbir SSH servisi bulunamadı.")
         return
 
     first_name = Path(target_files[0]).stem
-    output_file = VULN_OUTPUT_DIR / f"ftp_{first_name}.txt"
+    output_file = VULN_OUTPUT_DIR / f"ssh_{first_name}.txt"
     _save_results(all_results, output_file)
-    logger.info(f"[+] {len(all_results)} FTP servisi kaydedildi → {output_file}")
-    generate_report("FTP Analysis", all_results, scan_input)
+    logger.info(f"[+] {len(all_results)} SSH servisi kaydedildi → {output_file}")
+
+    report_results = [(ip, url) for ip, url, _ in all_results]
+    generate_report("SSH Analysis", report_results, scan_input)
 
 
 def _resolve_targets(scan_input: str) -> List[str]:
@@ -51,7 +54,7 @@ def _resolve_targets(scan_input: str) -> List[str]:
     return []
 
 
-def _parse_ftp_from_nmap(file_path: str) -> List[Tuple[str, str]]:
+def _parse_ssh_from_nmap(file_path: str) -> List[Tuple[str, str, str]]:
     results = []
     current_host = ""
     try:
@@ -62,21 +65,23 @@ def _parse_ftp_from_nmap(file_path: str) -> List[Tuple[str, str]]:
                 if m:
                     current_host = m.group(1)
                     continue
-                m = _FTP_PATTERN.search(line)
+                m = _SSH_PATTERN.search(line)
                 if m and current_host:
                     port = m.group(1)
-                    url = f"ftp://{current_host}" if port == "21" else f"ftp://{current_host}:{port}"
-                    results.append((current_host, url))
-                    logger.info(f"  [FTP] {url}")
+                    bm = _BANNER_PATTERN.search(line)
+                    banner = bm.group(1).strip() if bm else "unknown"
+                    url = f"ssh://{current_host}" if port == "22" else f"ssh://{current_host}:{port}"
+                    results.append((current_host, url, banner))
+                    logger.info(f"  [SSH] {url}  banner: {banner}")
     except OSError as e:
         logger.error(f"Dosya okunamadı ({file_path}): {e}")
     return results
 
 
-def _save_results(results: List[Tuple[str, str]], output_file: Path) -> None:
+def _save_results(results: List[Tuple[str, str, str]], output_file: Path) -> None:
     try:
         with open(output_file, "w", encoding="utf-8") as f:
-            for _, url in results:
-                f.write(f"{url}\n")
+            for _, url, banner in results:
+                f.write(f"{url}  [{banner}]\n")
     except OSError as e:
         logger.error(f"Sonuçlar yazılamadı: {e}")
